@@ -253,9 +253,9 @@ valine:
 
 #####     Footer Settings    ####
 # ------------------------------------
-since: 2018
+since: 2019
 
-footer_custom_text:
+footer_custom_text: 
 
 footer_copyright:
   enable: true
@@ -365,7 +365,7 @@ canvas_ribbon:
 
 # 動態彩帶
 canvas_ribbon_piao:
-  enable: false
+  enable: true
 
 # canvas_nest
 # https://github.com/hustcc/canvas-nest.js
