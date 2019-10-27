@@ -51,7 +51,7 @@
         return;
       }
     } else {
-      var html = [
+     /* var html = [
         '<div id="' + id + '" class="article-share-box">',
           '<input class="article-share-input" value="' + url + '">',
           '<div class="article-share-links">',
@@ -61,8 +61,14 @@
             '<a href="https://plus.google.com/share?url=' + encodedUrl + '" class="article-share-google" target="_blank" title="Google+"></a>',
           '</div>',
         '</div>'
+      ].join('');*/
+var html = [
+        '<div id="' + id + '" class="article-share-box">',
+          '<input class="article-share-input" value="' + url + '">',
+          '<div class="article-share-links">',
+                    '</div>',
+        '</div>'
       ].join('');
-
       var box = $(html);
 
       $('body').append(box);
