@@ -8,9 +8,7 @@ tags:
 为梳理所学知识，决定使用Hexo+Git+腾讯云搭建博客以作记录，另外使用webhook实现自动化构建。该文章主要阐述该博客的搭建过程，希望给大家带来帮助。
 
 # 搭建流程
-
 ## 购买腾讯云
-
 1. 注册腾讯云账号
 
 2. 购买云服务器。
@@ -30,7 +28,6 @@ carlson用的是学生优惠套餐，费用为120元一年。如果不能享用�
 检查防火墙状态`systemctl status firewalld`，关闭`systemctl  stop firewalld`，服务器环境准备完成。
 
 ## 搭建hexo
-
 1. 安装nodejs环境
 
 	1.1. 登陆服务器创建目录，下载安装包并查看版本。该文章所有命令仅作参考，目录一般可自定义。
@@ -57,9 +54,7 @@ hexo server -p 80
 ```
 
 3. 通过外网IP或域名访问，成功访问则代表博客环境准备完成
-
 ## 安装git
-
 1. 安装git环境
 
 	1.1. 安装必要依赖`yum install curl-devel expat-devel gettext-devel openssl-devel zlib-devel`。
@@ -93,7 +88,6 @@ git push -u origin master
 ```
 
 ## 搭建github-webhook
-
 1. 安装github-webhook
 
 	1.1. 安装依赖`npm install -g github-webhook-handler`。[github源码地址](https://github.com/rvagg/github-webhook-handler)
@@ -155,9 +149,7 @@ hexo server -p 80
 
 # 开发流程
 完成搭建后，已可在任意环境下拉取代码、编写以及推送，下面开发流程只作简单介绍
-
 ## 编写文章
-
 1. 安装git依赖
 
 2. 克隆仓库`git clone https://github.com/13631372596/TestBlog.git`
@@ -181,7 +173,6 @@ git push
 
 ## 调整博客样式
 可查看参考文献中的《hexo-theme-butterfly安裝文檔》
-
 1. 修改主题为Butterfly
 	1.1. 下载主题`git clone -b master https://github.com/jerryc127/hexo-theme-butterfly.git themes/Butterfly`
 
@@ -196,3 +187,5 @@ git push
 3. [hexo语法 - 官网](https://hexo.io/zh-cn/docs/commands.html)
 4. [Markdown基本语法 - 高鸿祥](https://www.jianshu.com/p/191d1e21f7ed)
 5. [hexo-theme-butterfly安裝文檔 - jerryc（该blog主题作者）](https://docs.jerryc.me/)
+
+[遗留]: 1.调整样式；2.复制；3.防爬虫
