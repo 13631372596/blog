@@ -349,8 +349,77 @@ tags:
 
 3. 必须通过线程池获取线程资源
 
-4. 不允许使用Executors去创建线程池，而是通过ThreadPoolExecutor的方式
+4. 不允许使用Executors去创建线程池，而是通过ThreadPoolExecutor的方式，threadPoolExecutor可以灵活定义很多参数。
+    **Executors常用的四种线程池，可查看参考链接《Executor线程池的简单使用》**
+    * FixedThreadPool：定长线程池，达到规模不再创建。允许请求队列长度为Integer.MAX_VALUE，容易OOM
+    * SingleThreadPool：单线程线程池，保证顺序执行。允许请求队列长度为Integer.MAX_VALUE，容易OOM
+    * CachedThreadPool：可缓存线程池，若无可回收线程则新建。允许创建线程数量为Integer.MAX_VALUE，容易OOM
+    * ScheduledThreadPool：定长线程池，支持定时及周期性任务执行。
 
+5. SimpleDateFormat线程不安全，一般不定义为static，定义为static时必须加锁。JDK8用Instant代替Date，LocalDateTime代替Calendar，DateTimeFormatter代替SimpleDateFormat。可查看参考链接《JDK8这样处理日期》
+
+6. ThreadLocal必须回收
+    ```
+    objectThreadLocal.set(userInfo);
+    try {
+        // TODO
+    } finally {
+        objectThreadLocal.remove();
+    }
+    ```
+7. 能不用锁就不用锁，能锁区块就不锁整个方法体，能用对象锁就不用类锁
+
+8. 多线程加锁顺序需一致，否则可能死锁
+
+9. 使用阻塞等待必须在try之外获取锁，在finally中解锁
+    ```
+    Lock lock = new XxxLock();
+    // ...
+    lock.lock();
+    try {
+        // TODO
+    } finally {
+        lock.unlock();
+    }
+    ```
+    * 加锁方法与try之间没有可能抛出异常的方法调用
+    * 防止unlock对未加锁对象解锁
+
+10.  使用尝试机制获取锁时，必须判断当前线程是否持有锁
+    ```
+    Lock lock = new XxxLock();
+    // ...
+    boolean isLocked = lock.tryLock();
+    if (isLocked) {
+        try {
+            // TODO
+        } finally {
+            lock.unlock();
+        }
+    }   
+    ```
+11. 并发修改同一记录时，加锁避免更新丢失。
+    * 要么在应用层加锁，要么在缓存加锁，要么在数据库使用乐观锁version
+    * 访问冲突率小于20%推荐用乐观锁，否则用悲观所。乐观锁重试次数不小于3次。可查看参考链接《SpringBoot Mybatis 乐观锁重试实现》
+
+12. 多线程处理定时任务时，Timer运行的多个TimeTask之一没捕获异常时，其他任务自动终止。使用ScheduledExecutorService没有这个问题
+
+13. 乐观锁获得锁时已完成更新操作，若处理不当容易造成系统压力或数据异常，所以资金相关的金融敏感信息使用悲观锁
+
+14. 使用CountDownLatch进行异步操作时，线程退出前必须调用countDown，注意异常确保countDown能执行，避免主线程无法执行await直到超时才返回结果。try-catch捕获不到子线程抛出的异常。
+
+15. 避免Random实例被多线程使用，虽为线程安全，但竞争同一seed(用于构造随机数生成器的参数)性能会下降。JDK7后直接使用ThreadLocalRandom，JDK7前需确保每个线程有一个Random实例
+
+16. 并发场景下，通过双重检查锁实现延迟初始化。可查看参考链接《Java中的双重检查锁》
+
+17. volatile可解决多线程内存不可见问题。一写多读可以解决变量同步问题，多写无法解决线程安全问题。可查看参考链接《volatile你必须了解一下》
+
+18. HashMap在容量不够进行resize时由于高并发可能出现死链，可使用其他数据结构或加锁规避该风险。可查看参考链接《HashMap导致的死链以及数据丢失问题》
+
+19. ThreadLocal对象使用static修饰。ThreadLocal解决共享变量问题，而无法解决共享对象问题。可查看参考链接《ThreadLocal原理解析与注意事项》
+
+## 控制语句
+1. switch
 
 # 异常日志
 
@@ -366,10 +435,17 @@ tags:
 
 # 代码检测
 
-# 参考文献
+# 参考链接
 1. [POJO等Java中的概念分别指什么 - 知乎话题](https://www.zhihu.com/question/39651928/answers/updated)
 2. [JDK8接口新特性：默认方法](https://www.jianshu.com/p/42c329cbe9b7)
 3. [mysql对应java中常用的字段](https://www.cnblogs.com/wenwenzuiniucha/p/11155110.html)
 4. [细说 Java 的深拷贝和浅拷贝](https://www.cnblogs.com/plokmju/p/7357205.html)
 5. [关于equals和hashCode](https://blog.csdn.net/CringKong/article/details/89429269)
 6. [java中的CAS和原子类的实现（JDK1.8）](https://www.jianshu.com/p/a533cbb740c6)
+7. [Executor线程池的简单使用](https://www.cnblogs.com/qlqwjy/p/9470414.html)
+8. [JDK8这样处理日期](https://cloud.tencent.com/developer/article/1442102)
+9. [SpringBoot Mybatis 乐观锁重试实现](https://blog.csdn.net/qq_32923745/article/details/88800060)
+10. [Java中的双重检查锁](https://www.cnblogs.com/xz816111/p/8470048.html)
+11. [volatile你必须了解一下](https://www.cnblogs.com/fengzheng/p/9070268.html)
+12. [HashMap导致的死链以及数据丢失问题](https://www.jianshu.com/p/11c99bf29ad2)
+13. [ThreadLocal原理解析与注意事项](https://www.jianshu.com/p/1268e47af4d1)

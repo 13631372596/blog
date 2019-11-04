@@ -158,9 +158,9 @@ hexo server -p 80
 
 4. 安装npm及hexo依赖
 
-5. 创建新文章`hexo new test`，文件会在"/博客目录/source/_posts/"中生成，可查看参考文献中的《hexo语法》
+5. 创建新文章`hexo new test`，文件会在"/博客目录/source/_posts/"中生成，可查看参考链接中的《hexo语法》
 
-6. 对test.md进行编写，可查看参考文献中的《Markdown基本语法》
+6. 对test.md进行编写，可查看参考链接中的《Markdown基本语法》
 
 7. 本地发布服务`hexo server -p 80`，可同时修改test.md并访问地址localhost进行测试
 
@@ -172,7 +172,7 @@ git push
 ```
 
 ## 调整博客样式
-可查看参考文献中的《hexo-theme-butterfly安裝文檔》
+可查看参考链接中的《hexo-theme-butterfly安裝文檔》
 1. 修改主题为Butterfly
 	1.1. 下载主题`git clone -b master https://github.com/jerryc127/hexo-theme-butterfly.git themes/Butterfly`
 
@@ -181,7 +181,7 @@ git push
 2. 一些推荐修改的配置（**后续更新**）
 	
 
-# 参考文献
+# 参考链接
 1. [程序员如何搭建自己的个人博客 - 方志朋](https://www.cnblogs.com/forezp/p/9852069.html)
 2. [最全Hexo博客搭建 - 遇见西门](https://www.simon96.online/2018/10/12/hexo-tutorial/)
 3. [hexo语法 - 官网](https://hexo.io/zh-cn/docs/commands.html)
