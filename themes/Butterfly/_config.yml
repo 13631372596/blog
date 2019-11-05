@@ -289,10 +289,10 @@ qihu_site_verification:
 Flink:
   headline: 友情鏈接
   info_headline: 我的Blog資料
-  name: Blog 名字： JerryC
-  address: Blog 地址： https://jerryc.me/
-  avatar: Blog 頭像： https://jerryc.me/img/avatar.png
-  info: Blog 簡介： 今日事,今日畢
+  name: Blog 名字： Carlson
+  address: Blog 地址： https://github.com/13631372596
+  avatar: Blog 頭像： https://avatars1.githubusercontent.com/u/25533014?s=460&v=4
+  info: Blog 簡介： 水滴石穿
   comment: 如果需要交換友鏈,請留言
 
 # 打賞按鈕
@@ -420,11 +420,13 @@ hr:
 # 主頁subtitle
 # 打字效果
 # (如果有英文逗號' , '，請使用轉義字符 &#44;)
+title: Carlson's Blog
+
 subtitle: 
   enable: true
   sub:
-    - 今日事&#44;今日畢
-    - Never put off till tomorrow what you can do today
+    - 水 滴 &#44; 石 穿
+    - Constant dripping wears the stone
 
 
 

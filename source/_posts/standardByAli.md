@@ -419,17 +419,212 @@ tags:
 19. ThreadLocal对象使用static修饰。ThreadLocal解决共享变量问题，而无法解决共享对象问题。可查看参考链接《ThreadLocal原理解析与注意事项》
 
 ## 控制语句
-1. switch
+1. switch方法中，每个case要么通过continue/break/return终止，要么注释说明到哪个case为止。必须包含default且放最后，即使没有代码。break为退出switch语句，return退出方法体。
+
+2. 当switch参数类型为String时，必须判断null
+
+3. if/else/for/while/do必须用大括号，避免单行方式。
+
+4. 高并发场景，使用大于或小于来判断，避免等于判断被击穿
+
+5. 表达异常时少用if-else，可改成：
+    ```
+    if (condition) {
+        return obj;
+    }
+    // TODO
+    ```
+    if-else请勿超过3层，超过3层可用卫语句（有限考虑失败或异常）、策略模式、状态模式来实现
+
+6. 除getXxx/isXxx等常用方法外，不要在条件判断中执行复杂语句。复杂逻辑结果赋值给一个有意义的布尔变量
+
+7. 不要在条件等表达式中插入赋值语句
+
+8. 循环体要考虑性能，定义对象、变量、获取数据库、不必要的try-catch尽量移至循环体外
+
+9. 避免采用取反逻辑运算符
+
+10. 接口入参保护，如批量操作时限定数量、查询时限定时间或条数
+
+11. 下列情形的方法做参数校验：
+    * 调用频次低
+    * 执行时间开销大（参数校验时间可忽略不计）
+    * 需要极高稳定性和可用性
+    * 对外提供的开放接口
+    * 敏感权限入口
+
+12. 下列情形的方法不需要参数校验：
+    * 极有可能被循环调用（方法必须注明外部参数检查要求）
+    * 底层调用频度搞（参数错误不太可能到底层才暴露，如DAO可忽略参数校验）
+    * 被声明为private，只会被自己代码所调用的方法（如调用方传入参数已做校验）
+
+## 注释规约
+1. 类、类属性、类方法的注释，必须用Javadoc规范"/**内容*/"
+
+2. 抽象方法（包括接口方法）必须用Javadoc注释。说明返回值、参数、异常和方法实现的功能，还有子类实现的要求
+
+3. 类必须添加创建者和创建日期
+
+4. 方法内单行注释用"//"，多行注释用"/* */"，与代码对齐
+
+5. 枚举类型必须有注释说明用途
+
+6. "半吊子"英文不如中文，专有名词和关键字保持英文
+
+7. 代码修改，注释也要修改，特别是参数、返回值、异常和核心逻辑等
+
+8. 后续会恢复的代码注释时请详细说明，无用则直接删除
+
+9. 注释要求，一是反映设计思想和代码逻辑，二是说明业务含义
+
+10. 好的命名和代码结构是自解析的，如put(elephant, fridge)不需额外注释。注释力求精简准确，避免过多过滥 
+
+11. 特殊注释标记，著名标记人、时间和预计处理时间
+    * TODO：目前还未实现，需要实现。只能用于类、接口和方法（因为是Javadoc标签）
+    * FIXME：错的代码，需要及时纠正
+
+## 其它
+1. 利用正则表达式的预编译功能，加快匹配速度。不要在方法体内定义Patter.compile(规则)
+
+2. velocity（模板引擎）调用POJO属性时直接用属性名取值，自动调用getXxx（boolean基础数据类型为isXxx）
+
+3. 后台输送页面变量必须加&!{var}，${var}会直接显示在页面
+
+4. Math.random()返回的是double，获取整数类型随机数使用nextInt或nextLong
+
+5. 获取毫秒用System.currentTimeMillis()，纳秒用System.nanoTime()，JDK8推荐用Instant
+
+6. 日期格式化时，年份用yyyy，月份用大写M，分钟用小写m，24小时制用大写H，12小时制用小写h
+
+7. 根据MVC理论，视图职责是显示，不要加入复杂逻辑
+
+8. 任何数据结构的构造或初始化应指定大小，避免无限增长
+
+9. 及时清理不用的代码或配置信息。在后续可能恢复使用的代码上方使用三个斜杠"///"说明注释理由
 
 # 异常日志
+## 异常处理
+1. 可通过预检查规避的RuntimeException不应通过catch方式来处理，不如NPE、IndexOutOfBoundsException等
+
+2. 不用异常来做流程、条件控制
+
+3. catch请分清稳定（无论如何不回处理）和不稳定代码（尽可能区分异常类型），避免对大段代码try-catch使程序无法根据异常做处理和定位问题
+
+4. 捕获异常是为了处理，如果不处理，请将异常抛给调用者。最外层业务必须处理异常，转为为用户可理解内容
+
+5. try放到事务中时，catch异常后，如要回滚事务请手动回滚
+
+6. finally必须对资源、流对象进行关闭，有异常也要做try-catch
+    **JDK7及以上可用try-catch-resources，如InputStream和BufferedReader都实现AutoCloseable接口，自动关闭资源**
+    ```
+    try (InputStream is = new FileInputStream("fileName");
+             BufferedReader bf = new BufferedReader(new InputStreamReader(is))) {
+        // TODO
+    }
+    ```
+
+7. 不要在finally中使用return，否则try中的return并不马上返回且会被丢弃。
+
+8. 捕获异常与抛异常必须完全匹配，或者是抛异常的父类
+
+9. 调用RPC、二方包、或动态生成类的相关方法时，捕获异常使用Throwable，因为可能存在编译期正确但运行时抛出NoSuchMethodError的情况
+    ![Java异常简单关系图](/img/Java异常简单关系图.png)
+
+10. 方法返回值可为null，但必须注释说明什么情况会返回null。防止NPE是调用者的责任
+
+11. 防止NPE，注意：
+    * 返回类型为基础数据类型，但return包装数据类型
+    * 数据库查询结果
+    * 即使isNotEmpty集合的元素
+    * 远程调用返回对象
+    * Session中获取的数据
+    * 级联调用obj.getA().getB()。使用JDK8的Optional防止NPE，如
+    ```
+    return user.map(u -> u.getUsername())
+           .map(name -> name.toUpperCase())
+           .orElse(null);
+    ```
+    避免
+    ```
+    User user = .....
+    if (user != null) {
+        String name = user.getUsername();
+        if(name != null) {
+            return name.toUpperCase();
+        } else {
+            return null;
+        }
+    } else {
+        return null;
+    } 
+    ```
+
+12. 区分unchecked和checked异常，避免抛出RuntimeException，更不允许抛出Exception或Throwable。应使用有业务含义的自定义异常，如业界定义的DAOException、ServiceException
+
+13. 对公司外的http/api开放接口必须用"错误码"；应用内部推荐异常抛出；跨应用优先使用Result（封装isSuccess方法、错误码、错误简短信息）
+    **RPC方法使用Result理由**
+    * 抛异常返回，调用方没捕获则产生运行时错误
+    * 加栈信息返回，频繁出错时数据序列化和传输性能损耗
+
+14. DRY原则，避免出现重复代码，必要时抽取共性方法、抽象公共类甚至组件化。如一个类中有多个public方法进行数行相同参数校验
+
+## 日志规约
+1. 不直接使用日志系统（Log4j、Logback）中的API，应用日志框架SLF4J，利于日志处理方式统一
+
+2. 日志文件至少保存15天，因为有异常以"周"为频次发生。网络运行状态、安全相关信息、系统检测、管理后台操作、用户敏感操作留存日志不少于6个月
+
+3. 应用中扩展日志命名方式为：appName_logType_logName.log。logType为日志类型，如stats/monitor/access；logName为日志描述。推荐日志分类，如错误日志和业务日志分开存放。
+
+4. 日志输出，字符床拼接使用占位符，占位符仅是替换动作，提升性能。如log.debug("id：{}", id)
+
+5. trace/debug/info级别的日志，必须进行日志级别的开关判断。如debug(xxx参数)方法内第一行代码为"当isDisabled为真时直接返回true"，但xxx参数仍可能已进行字符串拼接。
+    * 正例
+    ```
+    if (log.isDebugEnabled()) {
+        log.debug("...");
+    }
+    ```
+    * 日志级别排序：OFF level、FATAL、ERROR、WARN、INFO、DEBUG、ALL level，从小到大
+
+6. 避免重复打印日志浪费磁盘空间，log4j.xml必须设置additivity=false。additivity表示子log是否继承父log的输出源，默认true，即子log会在父log的输出源中输出
+
+7. 异常信息应包括两类信息：案发现场、异常堆栈，如log.error(参数或者对象toString() + "_" + e.getMessage(), e)，不处理时请通过throws往上抛
+
+8. 生产环境禁止输出debug，有选择输出info，如使用warn记录刚上线的业务行为时需注意输出量并及时删除
+
+9. 可以用warn记录用户输入错误参数的情况，如非必要不要用error（只记录系统异常或重要错误），避免频繁报警
+
+10. 尽量用英文描述错误信息，如果英文描述不清楚用中文即可。国际化团队或海外由于字符集问题，必须使用全英
 
 # 单元测试
+1. 单元测试必须遵守AIR原则，具有Automatic（自动化）、Independent（独立性）、Repeatable（可重复）特点
+
+2. 应为全自动执行，且非交互的。不准使用System.out来人工验证，必须使用assert
+
+3. 单元测试用例间不能互相调用
+
+4. 可重复执行。持续集成中，即有代码check in时单元测试会被执行。要求代码把SUT（被测系统System under test）依赖改成注入，如用spring的注入或Mock实现
+
+5. 要求力度足够小，至多是类级别，一般为方法级别。单测不负责跨类或跨系统交互，那属于集成测试
+
+6. 核心业务、核心应用、核心模块的增量代码确保单元测试通过
+
+7. 单元测试代码必须写在如下工程目录src/test/java
+
+8. 单测目标为：语句覆盖率达到70% ；核心模块的语句覆盖率和分支覆盖率达到100%
+
+9. BCDE
 
 # 安全规约
 
 # MySQL数据库
 
 # 工程结构
+## 应用分层
+
+## 二方库依赖
+
+## 服务器
 
 # 设计规约
 
