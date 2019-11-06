@@ -15,17 +15,7 @@ tags:
 
 2. 代码中的命名需使用英文
 
-3. 类名使用UpperCamelCase，POJO后缀除外
-
-    **个人理解：**
-    
-    * POJO：附录写到"本手册POJO专指只有setter/getter/toString的简单类，包括DO/DTO/BO/VO"。
-    * PO：持久对象，与数据库中表字段一一映射。
-    * BO：业务对象，把数据封装为一个业务逻辑对象，可能含有多个PO。
-    * VO：视图对象，封装业务数据给前端展示。
-    * DTO：数据传输对象，封装服务间或前后端的传输数据。
-    * DO：数据对象，一般跟PO相同，但某些情况：如乐观锁version字段不存在于DO，反之DO有某些字段在内存中而不需要持久化的
-    ![POJO示例图](/img/POJO示例图.png)
+3. 类名使用UpperCamelCase，POJO（DO/DTO/BO/VO等）后缀除外
 
 4. 方法名、参数名、成员变量、局部变量使用lowerCamelCase
 
@@ -613,22 +603,127 @@ tags:
 
 8. 单测目标为：语句覆盖率达到70% ；核心模块的语句覆盖率和分支覆盖率达到100%
 
-9. BCDE
+9. 遵守BCDE原则
+    * Border，边界值测试
+    * Correct，正确输入，得到预期结果
+    * Design 与设计文档结合来编写
+    * Error 错误信息输入，得到预期结果
+
+10. 使用程序插入或导入的数据来准备数据，不能直接操作数据库增加数据
+
+11. 可设定回滚机制，或者对单测产生的数据做前后缀标识
+
+12. 对不可测代码做重构使代码可测，避免为达到测试要求而书写不规范代码
+
+13. 设计评审阶段，开发人员和测试人员一起确定单测范围，最好覆盖所有测试用例
+
+14. 在项目提测前完成单测，不建议发布后补充单测用例
+
+15. 为方便单测，代码应避免
+    * 构造方法中做过多事
+    * 过多全局变量和静态方法
+    * 过多外部依赖
+    * 过多条件语句
+
+16. 单测和开发同学、系统整体功能强相关，需要维护。好的单测能最大限度规避线上故障
 
 # 安全规约
+1. 隶属于用户个人的页面或功能必须进行权限控制校验，防止水平越权
+
+2. 敏感数据禁止直接展示，必须脱敏，如手机号隐藏中间4位
+
+3. 用户请求的参数必须做有效性验证。注意正则输入源的ReDos问题（可能导致正则死循环）
+
+4. 禁止向页面输出未菁安全过滤或未正确转义的用户数据
+
+5. 表单、AJAX提交必须执行CSRF安全验证
+    **CSRF跨站请求伪造是常见编程漏洞，攻击者可预先构造好URL，只要受害者一访问，后台便自动修改用户数据。请查看参考链接《CSRF攻击与防御》**
+
+6. 使用平台资源场景，如短信、邮件，必须实现正确的防重放机制，如数量、疲劳度、验证码，笔迷那滥刷
+
+7. 发帖、评论、发送即时消息等用户生成内容场景，必须实现防刷、违禁词过滤等风控策略
 
 # MySQL数据库
+## 建表规约
+
+## 索引规约
+
+## SQL语句
+
+## ORM映射
 
 # 工程结构
 ## 应用分层
+1. 手册原文
+    ![应用分层](/img/应用分层原文.png)
+
+2. 分层异常处理规约
+    * DAO使用catch(Exception)并throw new DAOException(e)，不需打印日志，因为日志在Manager/Service一定需捕获并打印。Manager层与Service同机部署，与DAO处理一致抛给Service，不同机时与Service处理一致，捕获并打印。顶层Web层不应往上抛异常，异常导致页面无法渲染应直接跳转友好错误页面并加上用户可理解的错误提示。
+
+3. 分层领域模型规约
+    * DO（Data Object）：与数据库表结构一一对应，通过DAO层向上传输数据源对象。
+    * DTO（Data Transfer Object）：数据传输对象，Service或Manager向外传输的对象。
+    * BO（Business Object）：业务对象，由Service层输出的封装业务逻辑对象。
+    * AO（Application Object）：应用对象，在Web层与Service层之间抽象的复用对象模型，极为贴近展示层，复用度不高。
+    * VO（View Object）：显示层对象，通常是Web向模板渲染引擎层传输的对象。
+    * Query：数据查询对象，各层接收上层的查询请求。超过2个参数的查询禁止使用Map
+
+    **个人理解**
+    * PO：持久对象，与数据库中表字段一一映射。
+    * BO：业务对象，把数据封装为一个业务逻辑对象，可能含有多个PO。
+    * VO：视图对象，封装业务数据给前端展示。
+    * DTO：数据传输对象，封装服务间或前后端的传输数据。
+    * DO：数据对象，一般跟PO相同，但某些情况：如乐观锁version字段不存在于DO，反之DO有某些字段在内存中而不需要持久化的
+    ![POJO个人理解图](/img/POJO示例图.png)
 
 ## 二方库依赖
+1. 定义遵从GAV原则
+    * GroupID格式：com.{公司/BU}.业务线\[.子业务线\]，最多4级。如com.alibaba.dubbo.register
+    * ArtifactID格式：产品线名-模块名。语义不重复不遗漏。如dubbo-client
+    * Version：参考下一条
+
+2. 二方库版本号命名方式：主版本号.次版本号.修订号。起始号为1.0.0
+    * 主版本号：产品方向改变，或大规模API不兼容，或架构不兼容升级。
+    * 次版本号：相对兼容，增加主要功能，影响范围极小的API不兼容修改。
+    * 修订号：完全兼容，修复BUG、新增次要功能
+
+3. 线上应用不要依赖SNAPSHOT(快照、开发中)版本，安全包除外，为保证应用发布的幂等性（一次和多次请求应有相同结果）和加快编译时的打包构建。
+
+4. 二方库的新增或升级，保持除功能点外的其他jar包不变。如有改变必须明确评估和验证。升级时进行dependency:resolve前后比对，通过dependency:tree找出差异点并使用\<exclude\>排除jar包
+
+5. 二方库可定义枚举，参数可使用枚举，但接口返回值不允许使用枚举或含枚举的POJO对象
+
+6. 依赖二方库群，必须定义统一版本变量。如${spring.version}
+
+7. 禁止子项目pom出现相同GroupId和ArtifactId但不同Version
+
+8. 底层技术框架、核心数据管理平台、或近硬件端系统谨慎引入第三方实现
+
+9. 所有pom依赖放在\<dependencie\>，所有版本声明放在\<dependencyManagement\>。子项目显示声明依赖的version和scope都读取父pom，父pom\<dependencies\>里的依赖也会默认被所有子项目继承。请查看参考链接《Maven实战-dependencies与dependencyManagement的区别》
+
+10. 二方库不要有配置项，至少不再加配置项
+
+11. 避免二方库依赖冲突，二方库发布应遵循
+    * 精简可控：移除一切不要的API和依赖，只包含ServiceAPI、必要的对象模型、Utils类等。如依赖其他二方库，尽量scope=provided（编译/测试，默认compile，即编译/测试/运行），由二方库使用者依赖具体版本号。无log实现，只依赖日志框架
+    * 稳定可追溯：版本变化、维护者、源码应被记录。除用户主动升级版本，否则公共二方库不应发生变化
 
 ## 服务器
+1. 高并发服务器建议调小TCP的time_wait（超时时间，默认240秒后才关闭time_wait状态的连接）。高并发下服务器会因为time_wait连接数太多可能无法建立新连接。
+    **/etc/sysctl.conf修改缺省值（秒）：`net.ipv4.tcp_fin_timeout = 30`**
 
+2. 调大最大文件句柄数（File Descriptor，默认1024），主流系统将TCP/UDP连接采用与文件一样的方式去管理，即一个连接对应一个fd，并发时可能因为fd不足而出现"open too many files"导致新连接无法建立。如`ulimit -n 2048`
+
+3. 设置JVM环境参数`-XX:+HeapDumpOnOutOfMemoryErro`，让JVM在OOM时输入dump信息
+
+4. 线上生产环境，JVM的Xms和Xmx设置一样大小，避免GC后调整堆大小带来压力。如`java -jar -Xmx2048m -Xms2048m xxx.jar`
+
+5. 服务器内部重定向用forward；外部重定向用URL拼装工具类（如URLBroker）生成，否则URL生成规则容易不一致带来问题和安全风险
+    
 # 设计规约
+1. 存储方案和底层数据结构的设计获得评审一致通过，并沉淀成为文档
 
 # 代码检测
+建议在开发过程中开启阿里规约检测以养成习惯。请参考链接《阿里巴巴Java开发规约IDEA插件安装及使用》
 
 # 参考链接
 1. [POJO等Java中的概念分别指什么 - 知乎话题](https://www.zhihu.com/question/39651928/answers/updated)
@@ -644,3 +739,6 @@ tags:
 11. [volatile你必须了解一下](https://www.cnblogs.com/fengzheng/p/9070268.html)
 12. [HashMap导致的死链以及数据丢失问题](https://www.jianshu.com/p/11c99bf29ad2)
 13. [ThreadLocal原理解析与注意事项](https://www.jianshu.com/p/1268e47af4d1)
+14. [CSRF攻击与防御](https://blog.csdn.net/xiaoxinshuaiga/article/details/80766369)
+15. [Maven实战-dependencies与dependencyManagement的区别](https://www.cnblogs.com/feibazhf/p/7886617.html)
+16. [阿里巴巴Java开发规约IDEA插件安装及使用](https://www.cnblogs.com/cnndevelop/p/7697920.html)
