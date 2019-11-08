@@ -235,7 +235,7 @@ tags:
     * 不允许运行过程中重新赋值的局部变量
     * 避免上下文重复使用一个变量
 
-23. Object的clone默认为浅拷贝，实现深拷贝需腹泻clone方法。
+23. Object的clone默认为浅拷贝，实现深拷贝需覆写clone方法。
     **浅拷贝**
     对基本数据类型进行值传递，对引用数据类型进行引用传递
     
@@ -244,12 +244,12 @@ tags:
 
 24. 类成员与方法访问控制从严，过宽访问范围不利于模块解耦
     * 访问控制修饰符
-        修饰符 | 当前类 | 同一包 | 子孙类（同一包）| 子孙类（不同包）| 其他包
-        :-|:-|:-|:-|:-|:-|
-        public | Y | Y | Y | Y | Y
-        protected | Y | Y | Y | Y/N | N
-        default（缺省） | Y | Y | Y | N | N 
-        private | Y | N | N | N | N 
+        修饰符 | 当前类 | 同一包 | 子孙类（不同包）| 其他包
+        :-|:-|:-|:-|:-|
+        public | Y | Y | Y | Y
+        protected | Y | Y | Y/N | N
+        default（缺省） | Y | Y | N | N 
+        private | Y | N | N | N 
   
         子类与基类不在同一包中时，子类实例可以访问其从基类继承而来的protected方法，而不能访问基类实例的protected方法
 
@@ -445,7 +445,7 @@ tags:
 
 12. 下列情形的方法不需要参数校验：
     * 极有可能被循环调用（方法必须注明外部参数检查要求）
-    * 底层调用频度搞（参数错误不太可能到底层才暴露，如DAO可忽略参数校验）
+    * 底层调用频度高（参数错误不太可能到底层才暴露，如DAO可忽略参数校验）
     * 被声明为private，只会被自己代码所调用的方法（如调用方传入参数已做校验）
 
 ## 注释规约
@@ -645,16 +645,119 @@ tags:
 
 # MySQL数据库
 ## 建表规约
-1. 表达是与否概念，必须使用is_xxx，数据类型为unsignedtinyint（1是，0否）。任何字段为
+1. 表达是与否概念，必须使用is_xxx，数据类型为unsignedtinyint（1是，0否）。任何字段为非负，必须是unsigned。
 
-2. 
+2. 表名、字段名必须用小写字母或数字（避免Linux下默认区分大小写节外生枝），禁止数字开头，禁止两个下划线中间只出现数字。
+
+3. 表名不使用复数名词
+
+4. 禁止保留字，如desc、range、match、delayed等
+
+5. 主键索引为pk_字段名；唯一索引为uk_字段名；普通索引为idx_字段名
+
+6. 小数类型为decimal，禁止使用float和double（存在精度损失问题，可能比较值时结果不正确）。DECIMAL(P,D)中P表示有效数字数，D表示小数点后的位数
+
+7. 如果存储的字符串长度几乎相等，使用char定长字符串类型
+
+8. varchar是可变长字符串，不预先分配存储空间。超度超5000时请定义为text，独立一张表并用主键对应，避免影响其他字段索引
+
+9. 表必备三字段：主键id（bigint unsigned，单表时自增、步长为1），创建时间create_time，更新时间update_time
+
+10. 表名最好是遵循"业务名称_表的作用"
+
+11. 库名与应用名尽量一致
+
+12. 修改字段含义或增加字段表示的状态时，更新注释
+
+13. 字段允许适当冗余，以提供性能
+    * 不是频繁修改字段
+    * 不是varchar超长字段
+    * 不是唯一索引字段
+
+14. 单表行数超500万行或单表容量超2G，才推荐分库分表。如三年后的数据量达不到此级别，请不要在创建表时就分库分表
+
+15. 合适的字符存储长度
 
 ## 索引规约
+1. 业务上有唯一特性的字段，即使是多个字段的组合也必须建成唯一索引。唯一索引影响insert的速度损耗可以忽略，但查询速度提升明显
+
+2. 超过3个表禁止join，join的字段数据类型必须一致，多表关联查询时保证关联字段需要索引
+
+3. 在varchar字段建立索引时，必须指定索引长度，没必要对全字段建立索引，根据实际文本区分度决定索引长度。长度为20的索引，区分度会高达90%以上，可使用count(distinct left(列名, 索引长度))/count(*)的区分度来确定。请参考链接《mysql索引长度与区分度选择》
+
+4. 页面搜索严禁左模糊或全模糊，如需要请走搜索引擎。索引文件具有B-Tree的最左前缀匹配特性，如左值未确定则无法使用此索引
+
+5. 利用索引的有序性：order by最后的字段为组合索引的一部分并放到索引组合的最后，避免出现file_sort影响性能。
+    * 正例：`where a=? and b=？ order by c`；索引为"a_b_c"
+    * 返例：`where a>? order by c`；索引"a_c"无法排序。索引存在范围查询时，无法利用索引的有序性
+
+6. 利用覆盖索引来查询操作避免回表，即索引上已包含查询结果的所有列
+
+7. 利用延迟关联过子查询优化超多分页场景。MySQL不是跳过offset行，而是取offset+N行，然后放弃前offset行并返回N行
+
+8. SQL性能优化的目标：至少达到range，要求是ref，consts最好。请参考链接《EXPLAIN的连接类型》
+    * consts：单表中最多只有一个匹配行（主键或唯一索引），优化阶段可读取数据
+    * ref：普通股的索引
+    * range： 对索引进行范围检索
+    * index：索引物理文件全扫描，非常慢，与全表扫描小巫见大巫
+
+9. 组合索引时，区分度最高在最左。如`where a=? and b=?`中a列几乎接近唯一值则只需单建idx_a索引即可。存在非等号和等号混合时，如`where a>? and b =?`，即使a区分度更高也必须把d放在索引最前即idx_b_a
+
+10. 防止因字段类型不同造成的隐式转换，导致索引失效
+
+11. 创建索引时切勿宁缺勿滥、宁滥勿缺和抵制唯一索引
 
 ## SQL语句
+1. 不要用count(列名)或count(常量)代替count(*)。count(*)会统计NULL行，而count(列名)不会统计
+
+2. count(distinct col)计算除null之外的不重复行数。count(distinct col1, col2)当其中一列权威null，即使另一列有不同值也返回0
+
+3. 当一列的值全为null，sum(col)、max、min、avg的返回结果为null，使用`SELECT IFNULL(SUM(column), 0) FROM table`避免NPE问题
+
+4. 使用ISNULL()来判断是否为null值，isnull(exper)时exper为空返回1，否则返回0。null值与任何值比较都为null
+
+5. 分页逻辑时，count为0应直接返回，避免执行分页查询语句
+
+6. 不使用外键与级联（不适合分布式、高并发集群），一切外键概念必须在应用层解决
+
+7. 存储过程难以调试与扩展，禁止使用
+
+8. 数据修改时，必须先select确认，避免出现误删除
+
+9. in操作能避免则避免，避免不了需评估in后的集合数量，控制在1000个内
+
+10. 如有国际化需要，所有字符串存储与表示均以utf-8编码，如需存储表情则选择utf8mb4
+    * utf-8下：`select length("轻松工作");` 返回12
+    * utf-8下：`select character_length("轻松工作");` 返回4
+
+11. TRUNCATE比DELETE快，且使用系统和事务日志资源少。但无事务和不触发trigger可能会造成事故，不建议使用
 
 ## ORM映射
+1. 表查询时，一律不要使用*，必须明确哪些字段
+    * 增加分析其解析成本
+    * 增减字段容易与resultMap配置不一致
+    * 无用字段增加网络消耗，特别是text
 
+2. POJO的布尔属性不能加is，而数据库字段必须加is
+
+3. 不要用resultClass作为返回参数，即使所有类属性名与数据库字段一一对应也需要定义。配置映射关系使字段与DO类解耦
+
+4. sql.xml配置参数使用`#{}`（预编译），不要使用`${}`（容易出现sql注入）
+
+5. iBATIS自带的`queryForList(String statementName , int start , int size)`不推荐使用。因其实现方式为在数据库取到statementName对应sql语句的所有记录，再通过subList取start, size的子集合
+
+6. 不允许直接拿HashMap与Hashtable作查询结果集输出。resultClass="Hashtable"时，值的类型不可控
+
+7. 更新数据时，必须同时更新gmt_modified字段值为当前时间
+
+8. 不要写大而全的更新接口，否则易出错、效率低、增加binlog存储
+
+9. 不要滥用@Transactional事务，会影响数据库的QPS（每秒查询率），使用事务的地方需考虑各方面的回滚方案，包括缓存回滚、搜索引擎回滚、消息补偿和统计修正等
+
+10. 关于mybatis中的动态SQL标签
+    * \<isEqual\>中compareValue是与属性值对比的常量，一般是数字，表示相等时执行
+    * \<isNotEmpty\>表示不为空且不为null时执行
+    * \<isNotNull\>表示不为null时执行
 
 # 工程结构
 ## 应用分层
@@ -681,6 +784,10 @@ tags:
     ![POJO个人理解图](/img/POJO示例图.png)
 
 ## 二方库依赖
+* 一方库：工程内部子项目模块依赖的库
+* 二方库：公司内部发布到中央仓库，供内部其他应用依赖的库（jar包）
+* 三方库：公司之外的开源库（jar包）
+
 1. 定义遵从GAV原则
     * GroupID格式：com.{公司/BU}.业务线\[.子业务线\]，最多4级。如com.alibaba.dubbo.register
     * ArtifactID格式：产品线名-模块名。语义不重复不遗漏。如dubbo-client
@@ -766,7 +873,7 @@ tags:
     * 自定义空间类型需明确交互方式
 
 # 代码检测
-建议在开发过程中开启阿里规约检测以养成习惯。请参考链接《阿里巴巴Java开发规约IDEA插件安装及使用》
+    建议在开发过程中开启阿里规约检测以养成习惯。请参考链接《阿里巴巴Java开发规约IDEA插件安装及使用》
 
 # 参考链接
 1. [POJO等Java中的概念分别指什么 - 知乎话题](https://www.zhihu.com/question/39651928/answers/updated)
@@ -783,6 +890,8 @@ tags:
 12. [HashMap导致的死链以及数据丢失问题](https://www.jianshu.com/p/11c99bf29ad2)
 13. [ThreadLocal原理解析与注意事项](https://www.jianshu.com/p/1268e47af4d1)
 14. [CSRF攻击与防御](https://blog.csdn.net/xiaoxinshuaiga/article/details/80766369)
-15. [Maven实战-dependencies与dependencyManagement的区别](https://www.cnblogs.com/feibazhf/p/7886617.html)
-16. [UML9种图的分类及运用](https://blog.csdn.net/qq_42758288/article/details/86620768)
-16. [阿里巴巴Java开发规约IDEA插件安装及使用](https://www.cnblogs.com/cnndevelop/p/7697920.html)
+15. [mysql索引长度与区分度选择](https://blog.csdn.net/zhang_referee/article/details/87561567)
+16. [EXPLAIN的连接类型](https://www.cnblogs.com/heat-man/p/4945708.html)
+17. [Maven实战-dependencies与dependencyManagement的区别](https://www.cnblogs.com/feibazhf/p/7886617.html)
+18. [UML9种图的分类及运用](https://blog.csdn.net/qq_42758288/article/details/86620768)
+19. [阿里巴巴Java开发规约IDEA插件安装及使用](https://www.cnblogs.com/cnndevelop/p/7697920.html) 
