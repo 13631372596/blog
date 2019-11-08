@@ -534,20 +534,20 @@ tags:
            .map(name -> name.toUpperCase())
            .orElse(null);
     ```
-    避免
-    ```
-    User user = .....
-    if (user != null) {
-        String name = user.getUsername();
-        if(name != null) {
-            return name.toUpperCase();
+        避免
+        ```
+        User user = .....
+        if (user != null) {
+            String name = user.getUsername();
+            if(name != null) {
+                return name.toUpperCase();
+            } else {
+                return null;
+            }
         } else {
             return null;
-        }
-    } else {
-        return null;
-    } 
-    ```
+        } 
+        ```
 
 12. 区分unchecked和checked异常，避免抛出RuntimeException，更不允许抛出Exception或Throwable。应使用有业务含义的自定义异常，如业界定义的DAOException、ServiceException
 
@@ -645,12 +645,16 @@ tags:
 
 # MySQL数据库
 ## 建表规约
+1. 表达是与否概念，必须使用is_xxx，数据类型为unsignedtinyint（1是，0否）。任何字段为
+
+2. 
 
 ## 索引规约
 
 ## SQL语句
 
 ## ORM映射
+
 
 # 工程结构
 ## 应用分层
@@ -709,7 +713,7 @@ tags:
 
 ## 服务器
 1. 高并发服务器建议调小TCP的time_wait（超时时间，默认240秒后才关闭time_wait状态的连接）。高并发下服务器会因为time_wait连接数太多可能无法建立新连接。
-    **/etc/sysctl.conf修改缺省值（秒）：`net.ipv4.tcp_fin_timeout = 30`**
+    **修改/etc/sysctl.conf缺省值（秒）：`net.ipv4.tcp_fin_timeout = 30`**
 
 2. 调大最大文件句柄数（File Descriptor，默认1024），主流系统将TCP/UDP连接采用与文件一样的方式去管理，即一个连接对应一个fd，并发时可能因为fd不足而出现"open too many files"导致新连接无法建立。如`ulimit -n 2048`
 
@@ -721,6 +725,45 @@ tags:
     
 # 设计规约
 1. 存储方案和底层数据结构的设计获得评审一致通过，并沉淀成为文档
+
+2. 需求分析阶段，与系统交互的User超过一类且相关User Case超过5个，使用用例图表达结构化需求。请参考链接《UML9种图的分类及运用》
+
+3. 业务对象状态超过3个，使用状态图明确有多少种状态、两两状态之间是否可直接转换、状态变化的触发条件
+
+4. 如果某个功能的调用链路设计对象超过3个，使用时序图各环节输入输出
+
+5. 如果模型超5个且存在复杂关系，使用类图表达且明确类之间的关系
+
+6. 超2个对象存在协作关系且需要表示复杂的处理流程，使用活动图表示
+
+7. 需求分析与系统设计考虑主功能时，需评估异常流程与业务边界
+
+8. 推荐类在设计与实现时符合单一原则，即一个类只负责一个职责，最易理解却最难实现
+
+9. 谨慎使用继承进行扩展，优先使用聚合/组合。继承必须符合里氏代换原则，即父类能出现子类一定能出现
+
+10. 系统设计时，根据依赖倒置，尽量依赖抽象类与接口，利于扩展、维护、解耦
+
+11. 系统设计时，注意对跨站开放，对修改闭合
+
+12. 系统设计阶段，抽取出来公共模块、配置、类、方法等，避免重复
+
+13. 敏捷开发虽省略多余设计方案、摒弃传统审批流程，但核心的必要设计和文档沉淀是需要的
+
+14. 系统设计主要目的为明确需求、逻辑、后期维护和重构，次要目的为指导编码
+
+15. 设计的本质是识别和表达系统难点，找到系统变化点并隔离变化点
+
+16. 系统架构设计目的：
+    * 确定系统边界，技术层面上的做与不做
+    * 确定系统内模块间的关系及模块的宏观输入输出
+    * 确定后续设计与烟花原则，使后续在规定框架内演化
+    * 确定非功能性需求，即安全性、可用性、可扩展性
+
+17. 无障碍产品设计：
+    * 交互空间元素必须能被tab键聚焦，且焦点顺序符合自然操作逻辑
+    * 登陆校验和请求拦截均需提供图形验证以外的方式
+    * 自定义空间类型需明确交互方式
 
 # 代码检测
 建议在开发过程中开启阿里规约检测以养成习惯。请参考链接《阿里巴巴Java开发规约IDEA插件安装及使用》
@@ -741,4 +784,5 @@ tags:
 13. [ThreadLocal原理解析与注意事项](https://www.jianshu.com/p/1268e47af4d1)
 14. [CSRF攻击与防御](https://blog.csdn.net/xiaoxinshuaiga/article/details/80766369)
 15. [Maven实战-dependencies与dependencyManagement的区别](https://www.cnblogs.com/feibazhf/p/7886617.html)
+16. [UML9种图的分类及运用](https://blog.csdn.net/qq_42758288/article/details/86620768)
 16. [阿里巴巴Java开发规约IDEA插件安装及使用](https://www.cnblogs.com/cnndevelop/p/7697920.html)
