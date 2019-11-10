@@ -292,7 +292,7 @@ Flink:
   name: Blog 名字： Carlson
   address: Blog 地址： https://github.com/13631372596
   avatar: Blog 頭像： https://avatars1.githubusercontent.com/u/25533014?s=460&v=4
-  info: Blog 簡介： 写下走过的路
+  info: Blog 簡介： 让回忆沉淀下来
   comment: 如果需要交換友鏈,請留言
 
 # 打賞按鈕
@@ -425,7 +425,7 @@ title: Carlson's Blog
 subtitle: 
   enable: true
   sub:
-    - 写下走过的路
+    - 让回忆沉淀下来
     - Just write down ur life
 
 
