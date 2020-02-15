@@ -24,6 +24,6 @@
     "hexo-renderer-stylus": "^0.3.3",
     "hexo-server": "^0.3.3",
     "or": "^0.2.0",
-    "yarn": "^1.19.1"
+    "yarn": "^1.22.0"
   }
 }
